@@ -76,7 +76,7 @@ export default function AdminClient() {
       setPosts(postsData || [])
       setComments(commentsData || [])
     } catch (err) {
-      setError('Failed to load data')
+      toast.error('Failed to load data')
     } finally {
       setLoading(false)
     }
