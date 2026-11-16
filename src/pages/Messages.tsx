@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
-import duckLogo from './images/duck_image.png'
-import { ConfirmModal } from './ConfirmModal'
-import { Lightbox } from './Lightbox'
+import duckLogo from '../images/duck_image.png'
+import { ConfirmModal } from '../components/ConfirmModal'
+import { Lightbox } from '../components/Lightbox'
+import { DuckLoader } from '../components/DuckLoader'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -39,6 +40,7 @@ export function Messages() {
   }>({})
 
   const [expandedCommentForm, setExpandedCommentForm] = useState<string | null>(null)
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set())
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean
@@ -202,25 +204,13 @@ export function Messages() {
           const post = posts.find((p) => p.id === postId)
           console.log('Post to delete:', post)
           if (post) {
-            const imagesToDelete: string[] = []
-
-            if (post.image_urls && post.image_urls.length > 0) {
-              imagesToDelete.push(...post.image_urls)
-            } else if (post.image_url) {
-              imagesToDelete.push(post.image_url)
-            }
-
-            console.log('Images to delete:', imagesToDelete)
-
-            for (const imageUrl of imagesToDelete) {
+            if (post.image_url) {
               try {
-                const path = imageUrl.split('/storage/v1/object/public/photos/')[1]
-                console.log('Deleting path:', path)
+                const path = post.image_url.split('/storage/v1/object/public/photos/')[1]
                 if (path) {
-                  const { error } = await supabase.storage
+                  await supabase.storage
                     .from('photos')
                     .remove([path])
-                  console.log('Delete result:', error)
                 }
               } catch (err) {
                 console.error('Error deleting image:', err)
@@ -298,7 +288,7 @@ export function Messages() {
       {error && <div className="error">{error}</div>}
 
       {loading ? (
-        <div className="loading">Loading messages...</div>
+        <DuckLoader />
       ) : posts.length === 0 ? (
         <div className="loading">No messages yet. Be the first to share.</div>
       ) : (
@@ -377,8 +367,10 @@ export function Messages() {
                       >
                         <img
                           src={url}
-                          alt={`${post.name} ${idx + 1}`}
+                          alt={`Photo shared by ${post.name}`}
                           loading="lazy"
+                          width={1200}
+                          height={1200}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -392,48 +384,79 @@ export function Messages() {
                 )}
 
                 <div className="comments">
-                  {getPostComments(post.id).length > 0 ? (
-                    getPostComments(post.id).map((comment) => (
-                      <div key={comment.id} className="comment">
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'start',
-                            marginBottom: '0.2rem',
-                          }}
-                        >
-                          <div className="comment-name">{comment.name}</div>
-                          {canDeleteComment(comment.id) && (
-                            <button
-                              onClick={() => handleDeleteComment(comment.id)}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExpandedComments((prev) => {
+                        const next = new Set(prev)
+                        if (next.has(post.id)) {
+                          next.delete(post.id)
+                        } else {
+                          next.add(post.id)
+                        }
+                        return next
+                      })
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#666',
+                      cursor: 'pointer',
+                      padding: '0.2rem 0',
+                      fontSize: '0.85rem',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    {expandedComments.has(post.id) ? '▼' : '▶'} Comments{' '}
+                    {getPostComments(post.id).length > 0 && `(${getPostComments(post.id).length})`}
+                  </button>
+
+                  {expandedComments.has(post.id) && (
+                    <>
+                      {getPostComments(post.id).length > 0 ? (
+                        getPostComments(post.id).map((comment) => (
+                          <div key={comment.id} className="comment">
+                            <div
                               style={{
-                                background: 'transparent',
-                                color: '#999',
-                                border: '1px solid #ddd',
-                                padding: '0.2rem 0.4rem',
-                                fontSize: '0.7rem',
-                                borderRadius: '2px',
-                                cursor: 'pointer',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'start',
+                                marginBottom: '0.2rem',
                               }}
                             >
-                              Delete
-                            </button>
-                          )}
+                              <div className="comment-name">{comment.name}</div>
+                              {canDeleteComment(comment.id) && (
+                                <button
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                  style={{
+                                    background: 'transparent',
+                                    color: '#999',
+                                    border: '1px solid #ddd',
+                                    padding: '0.2rem 0.4rem',
+                                    fontSize: '0.7rem',
+                                    borderRadius: '2px',
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                            <div className="comment-message">{comment.message}</div>
+                            <div className="comment-date">
+                              {formatDate(comment.created_at)}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{ color: '#aaa', fontSize: '0.9rem' }}>
+                          No comments yet
                         </div>
-                        <div className="comment-message">{comment.message}</div>
-                        <div className="comment-date">
-                          {formatDate(comment.created_at)}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ color: '#aaa', fontSize: '0.9rem' }}>
-                      No comments yet
-                    </div>
+                      )}
+                    </>
                   )}
 
-                  {expandedCommentForm === post.id ? (
+                  {expandedComments.has(post.id) && expandedCommentForm === post.id ? (
                     <form
                       className="comment-form"
                       onSubmit={(e) => {
@@ -503,22 +526,24 @@ export function Messages() {
                       </div>
                     </form>
                   ) : (
-                    <button
-                      onClick={() => setExpandedCommentForm(post.id)}
-                      style={{
-                        background: 'transparent',
-                        color: '#666',
-                        border: '1px solid #ddd',
-                        padding: '0.6rem 1rem',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.9rem',
-                        width: '100%',
-                        marginTop: '0.5rem',
-                      }}
-                    >
-                      Add a comment
-                    </button>
+                    expandedComments.has(post.id) && (
+                      <button
+                        onClick={() => setExpandedCommentForm(post.id)}
+                        style={{
+                          background: 'transparent',
+                          color: '#666',
+                          border: '1px solid #ddd',
+                          padding: '0.6rem 1rem',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.9rem',
+                          width: '100%',
+                          marginTop: '0.5rem',
+                        }}
+                      >
+                        Add a comment
+                      </button>
+                    )
                   )}
                 </div>
               </div>

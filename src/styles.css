@@ -276,6 +276,10 @@ nav {
   gap: 1rem;
 }
 
+.mobile-menu-btn {
+  display: none;
+}
+
 /* Modal */
 .modal-backdrop {
   position: fixed;
@@ -310,6 +314,22 @@ nav {
   }
   .logo {
     display: flex !important;
+    margin-left: auto !important;
+    align-items: center;
+    height: 40px;
+  }
+  .logo img {
+    height: 28px !important;
+    width: auto !important;
+  }
+  .mobile-menu-btn {
+    display: block !important;
+  }
+  .mobile-overlay {
+    display: block !important;
+  }
+  .mobile-menu {
+    display: flex !important;
   }
 }
 
@@ -328,5 +348,23 @@ nav {
 
   .post-content {
     padding: 0.75rem;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
   }
 }

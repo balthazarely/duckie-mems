@@ -8,11 +8,11 @@ import {
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import duckLogo from "./images/duck_image.png";
-import { Admin } from "./Admin";
-import { Home } from "./Home";
-import { Messages } from "./Messages";
-import { Gallery } from "./Gallery";
-import { SharePage } from "./SharePage";
+import { Admin } from "./pages/Admin";
+import { Home } from "./pages/Home";
+import { Messages } from "./pages/Messages";
+import { Gallery } from "./pages/Gallery";
+import { SharePage } from "./pages/SharePage";
 import "./styles.css";
 
 const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
@@ -67,7 +67,38 @@ function AppContent() {
     <div
       style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
     >
-      <Toaster position="bottom-center" reverseOrder={false} />
+      <Toaster
+        position="bottom-center"
+        reverseOrder={false}
+        toastOptions={{
+          style: {
+            padding: "1rem 1.5rem",
+            fontSize: "0.95rem",
+          },
+          success: {
+            duration: 3000,
+            style: {
+              background: "#4caf50",
+              color: "white",
+            },
+            iconTheme: {
+              primary: "white",
+              secondary: "#4caf50",
+            },
+          },
+          error: {
+            duration: 4000,
+            style: {
+              background: "#f44336",
+              color: "white",
+            },
+            iconTheme: {
+              primary: "white",
+              secondary: "#f44336",
+            },
+          },
+        }}
+      />
       <div style={navStyle}>
         <div style={navContainerStyle}>
           {/* Desktop Navigation - Left */}
@@ -145,6 +176,27 @@ function AppContent() {
             className="mobile-menu-btn"
           >
             ☰
+          </button>
+          <button
+            onClick={() => navigate("/")}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#333",
+              fontSize: "1.5rem",
+              cursor: "pointer",
+              padding: 0,
+            }}
+            className="mobile-menu-btn"
+          >
+            <img
+              src={duckLogo}
+              alt="Logo"
+              style={{
+                height: "24px",
+                width: "auto",
+              }}
+            />
           </button>
         </div>
 

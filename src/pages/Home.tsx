@@ -1,7 +1,7 @@
-import duckWineImage from "./images/duck-wine-cropped.jpeg";
-import duckDogImage from "./images/duck-dog.jpeg";
-import duckKidsImage from "./images/duck-kids.jpeg";
-import duckLogo from "./images/duck_image.png";
+import duckWineImage from "../images/duck-wine-cropped.jpeg";
+import duckDogImage from "../images/duck-dog.jpeg";
+import duckKidsImage from "../images/duck-kids.jpeg";
+import duckLogo from "../images/duck_image.png";
 
 export function Home() {
   return (
@@ -10,6 +10,7 @@ export function Home() {
         <img
           src={duckWineImage}
           alt="Anni"
+          loading="lazy"
           style={{
             width: "100%",
             maxWidth: "800px",
@@ -49,6 +50,7 @@ export function Home() {
           <img
             src={duckDogImage}
             alt="Anni with dog"
+            loading="lazy"
             style={{
               width: "100%",
               borderRadius: "8px",
@@ -57,6 +59,7 @@ export function Home() {
           <img
             src={duckKidsImage}
             alt="Anni with kids"
+            loading="lazy"
             style={{
               width: "100%",
               borderRadius: "8px",

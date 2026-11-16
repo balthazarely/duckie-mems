@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
-import { ConfirmModal } from './ConfirmModal'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -108,27 +108,17 @@ export function Admin({
       setSuccess('')
 
       const post = posts.find((p) => p.id === confirmDelete.id)
-      if (post) {
-        const imagesToDelete: string[] = []
-
-        if (post.image_urls && post.image_urls.length > 0) {
-          imagesToDelete.push(...post.image_urls)
-        } else if (post.image_url) {
-          imagesToDelete.push(post.image_url)
-        }
-
-        for (const imageUrl of imagesToDelete) {
-          try {
-            const path = imageUrl.split('/storage/v1/object/public/photos/')[1]
-            if (path) {
-              await supabase.storage
-                .from('photos')
-                .remove([path])
-                .catch(() => {})
-            }
-          } catch (err) {
-            console.error('Error deleting image:', err)
+      if (post?.image_url) {
+        try {
+          const path = post.image_url.split('/storage/v1/object/public/photos/')[1]
+          if (path) {
+            await supabase.storage
+              .from('photos')
+              .remove([path])
+              .catch(() => {})
           }
+        } catch (err) {
+          console.error('Error deleting image:', err)
         }
       }
 
@@ -759,6 +749,7 @@ export function Admin({
                     <img
                       src={photo.image_url}
                       alt={photo.caption || 'gallery photo'}
+                      loading="lazy"
                       style={{
                         width: '100%',
                         height: '150px',

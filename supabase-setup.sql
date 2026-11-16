@@ -3,8 +3,8 @@ create table if not exists posts (
   id uuid primary key default gen_random_uuid(),
   created_at timestamp with time zone default now(),
   name text not null check (length(name) <= 80),
-  caption text check (caption is null or length(caption) <= 500),
-  image_url text not null
+  caption text check (caption is null or length(caption) <= 2000),
+  image_url text
 );
 
 -- Create comments table

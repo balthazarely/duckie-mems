@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Lightbox } from "./Lightbox";
+import { Lightbox } from "../components/Lightbox";
+import { DuckLoader } from "../components/DuckLoader";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -17,6 +18,7 @@ interface Post {
   id: string;
   created_at: string;
   name: string;
+  caption: string | null;
   image_url: string | null;
   image_urls: string[] | null;
 }
@@ -98,6 +100,9 @@ export function Gallery() {
           <img
             src={photo.image_url}
             alt={photo.caption || photo.name || "photo"}
+            loading="lazy"
+            width={1200}
+            height={1200}
             style={{
               width: "100%",
               height: "150px",
@@ -147,7 +152,7 @@ export function Gallery() {
       {error && <div className="error">{error}</div>}
 
       {loading ? (
-        <div className="loading">Loading gallery...</div>
+        <DuckLoader />
       ) : (
         <>
           <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
