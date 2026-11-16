@@ -2,11 +2,18 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
+import { Lightbox } from '@/app/components/Lightbox'
 
 export default function Home() {
   const [shareHovered, setShareHovered] = useState(false)
+  const [lightbox, setLightbox] = useState({
+    isOpen: false,
+    images: ['/duck-dog.jpeg', '/duck-kids.jpeg'],
+    initialIndex: 0,
+  })
 
   return (
+    <>
     <div className="container">
       <header>
         <div style={{ position: 'relative', width: '100%', maxWidth: '800px', marginBottom: '2rem' }}>
@@ -53,7 +60,15 @@ export default function Home() {
           }}
           className="image-grid"
         >
-          <div style={{ position: 'relative', width: '100%', paddingBottom: '100%' }}>
+          <div
+            onClick={() => setLightbox({ ...lightbox, isOpen: true, initialIndex: 0 })}
+            style={{
+              position: 'relative',
+              width: '100%',
+              paddingBottom: '100%',
+              cursor: 'pointer',
+            }}
+          >
             <Image
               src="/duck-dog.jpeg"
               alt="Anni with dog"
@@ -64,7 +79,15 @@ export default function Home() {
               }}
             />
           </div>
-          <div style={{ position: 'relative', width: '100%', paddingBottom: '100%' }}>
+          <div
+            onClick={() => setLightbox({ ...lightbox, isOpen: true, initialIndex: 1 })}
+            style={{
+              position: 'relative',
+              width: '100%',
+              paddingBottom: '100%',
+              cursor: 'pointer',
+            }}
+          >
             <Image
               src="/duck-kids.jpeg"
               alt="Anni with kids"
@@ -140,5 +163,13 @@ export default function Home() {
         </div>
       </header>
     </div>
+
+    <Lightbox
+      isOpen={lightbox.isOpen}
+      images={lightbox.images}
+      initialIndex={lightbox.initialIndex}
+      onClose={() => setLightbox({ ...lightbox, isOpen: false })}
+    />
+    </>
   )
 }
