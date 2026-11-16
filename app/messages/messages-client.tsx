@@ -414,8 +414,11 @@ export default function MessagesClient() {
                           <Image
                             src={url}
                             alt={`Photo shared by ${post.name}`}
-                            width={200}
-                            height={200}
+                            width={100}
+                            height={100}
+                            quality={40}
+                            sizes="100px"
+                            loading="lazy"
                             style={{
                               width: "100%",
                               height: "100%",
@@ -428,7 +431,38 @@ export default function MessagesClient() {
                     </div>
                   )}
 
-                  <div className="comments">
+                  <div
+                    className="comments"
+                    onClick={() => {
+                      setExpandedComments((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(post.id)) {
+                          next.delete(post.id);
+                        } else {
+                          next.add(post.id);
+                        }
+                        return next;
+                      });
+                    }}
+                    style={{
+                      padding: expandedComments.has(post.id) ? "1rem" : "0 1rem",
+                      marginTop: expandedComments.has(post.id) ? "1rem" : "0.5rem",
+                      borderTop: expandedComments.has(post.id) ? "1px solid #e0e0e0" : "none",
+                      cursor: "pointer",
+                      transition: "background-color 0.2s ease",
+                      backgroundColor: expandedComments.has(post.id) ? "#f9f9f9" : "transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!expandedComments.has(post.id)) {
+                        e.currentTarget.style.backgroundColor = "#fafafa";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!expandedComments.has(post.id)) {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => {
@@ -449,7 +483,7 @@ export default function MessagesClient() {
                         cursor: "pointer",
                         padding: "0.2rem 0",
                         fontSize: "0.85rem",
-                        marginBottom: "0.5rem",
+                        marginBottom: expandedComments.has(post.id) ? "0.5rem" : "0.2rem",
                       }}
                     >
                       {expandedComments.has(post.id) ? "▼" : "▶"} Comments{" "}

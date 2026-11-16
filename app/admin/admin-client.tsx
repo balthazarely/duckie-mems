@@ -870,6 +870,8 @@ export default function AdminClient() {
                       alt="gallery photo"
                       width={150}
                       height={150}
+                      quality={50}
+                      loading="lazy"
                       style={{
                         width: '100%',
                         height: 'auto',

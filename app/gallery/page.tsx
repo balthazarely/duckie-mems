@@ -8,6 +8,14 @@ import { supabase } from '@/lib/supabase'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
+const FAMILY_PHOTOS = [
+  { id: '1', image_url: '/family gallery/IMG_0068.jpeg', name: '' },
+  { id: '2', image_url: '/family gallery/IMG_2015.jpeg', name: '' },
+  { id: '3', image_url: '/family gallery/IMG_4308.jpeg', name: '' },
+  { id: '4', image_url: '/family gallery/IMG_4547.jpeg', name: '' },
+  { id: '5', image_url: '/family gallery/IMG_4605.jpeg', name: '' },
+]
+
 interface GalleryPhoto {
   id: string
   image_id?: string
@@ -34,9 +42,9 @@ const MasonryGrid = ({
   <div
     style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
       gap: '1rem',
-      marginTop: '1rem',
+      padding: '0 1.5rem',
     }}
   >
     {photos.map((photo, idx) => (
@@ -61,27 +69,14 @@ const MasonryGrid = ({
             src={photo.image_url || `${supabaseUrl}/storage/v1/object/public/photos/${photo.image_id}`}
             alt="photo"
             fill
-            sizes="(max-width: 768px) 50vw, 33vw"
+            sizes="(max-width: 768px) 50px, 100px"
+            quality={50}
+            loading="lazy"
             style={{
               objectFit: 'cover',
             }}
           />
         </div>
-        {(photo.caption || photo.name) && (
-          <div
-            style={{
-              padding: '0.5rem',
-              fontSize: '0.8rem',
-              color: '#555',
-              background: '#f9f9f9',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {photo.caption || photo.name}
-          </div>
-        )}
       </button>
     ))}
   </div>
@@ -109,10 +104,7 @@ export default function Gallery() {
 
   async function fetchData() {
     try {
-      const { data: familyData } = await supabase
-        .from('gallery_photos')
-        .select('*')
-        .order('created_at', { ascending: false })
+      setFamilyPhotos(FAMILY_PHOTOS)
 
       const { data: postsData } = await supabase
         .from('posts')
@@ -120,7 +112,6 @@ export default function Gallery() {
         .or('image_url.not.is.null,image_urls.not.is.null')
         .order('created_at', { ascending: false })
 
-      setFamilyPhotos(familyData || [])
       setUserPhotos(postsData || [])
     } catch (err) {
       setError('Failed to load gallery')
@@ -140,26 +131,28 @@ export default function Gallery() {
   })
 
   return (
-    <div className="container">
-      <header>
-        <h1>Photo Gallery</h1>
-      </header>
+    <>
+      <div className="container">
+        <header>
+          <h1>Photo Gallery</h1>
+        </header>
 
-      {error && <div className="error">{error}</div>}
+        {error && <div className="error">{error}</div>}
 
-      <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-        <button
-          onClick={() => setActiveTab('family')}
-          style={tabButtonStyle(activeTab === 'family')}
-        >
-          Family Photos
-        </button>
-        <button
-          onClick={() => setActiveTab('shared')}
-          style={tabButtonStyle(activeTab === 'shared')}
-        >
-          Shared Memories
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'center' }}>
+          <button
+            onClick={() => setActiveTab('family')}
+            style={tabButtonStyle(activeTab === 'family')}
+          >
+            Family Photos
+          </button>
+          <button
+            onClick={() => setActiveTab('shared')}
+            style={tabButtonStyle(activeTab === 'shared')}
+          >
+            Shared Memories
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -210,6 +203,6 @@ export default function Gallery() {
         initialIndex={lightbox.initialIndex}
         onClose={() => setLightbox({ isOpen: false, images: [], initialIndex: 0 })}
       />
-    </div>
+    </>
   )
 }
