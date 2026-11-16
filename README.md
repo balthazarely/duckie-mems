@@ -1,6 +1,6 @@
-# Annie Memorial
+# Photo Wall
 
-A minimal, static memorial photo wall. Share photos and memories in a calm, respectful space.
+A minimal, static photo sharing site. Built with React, Vite, and Supabase.
 
 ## Tech Stack
 
@@ -77,24 +77,16 @@ Your site will be live at your Vercel URL.
 
 ## Features
 
-- **Share photos**: Upload a photo, add your name, and an optional caption.
-- **Comments**: Anyone can add a comment to any photo.
-- **Auto-resize**: Photos are resized to max 1600px in the browser before upload.
-- **No auth**: Public for all to view and contribute.
-- **Newest first**: Photos appear in reverse chronological order.
+- Photo uploads with optional messages
+- Public comments on contributions
+- Automatic image compression
+- Photo gallery with lightbox
+- Mobile-responsive design
+- No authentication required
 
 ## Customization
 
-Edit the header in `src/App.tsx`:
-
-```typescript
-<h1>Annie</h1>
-<div className="dates">1974–2024</div>
-<p className="tribute">
-  A life filled with love, laughter, and countless cherished memories.
-  Share your photo and thoughts here.
-</p>
-```
+Edit the header content in `src/Home.tsx` to customize the page title and messaging.
 
 Adjust colors and spacing in `src/styles.css`.
 

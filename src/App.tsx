@@ -21,7 +21,6 @@ function AppContent() {
   const [isAdmin, setIsAdmin] = useState(() => {
     return localStorage.getItem("adminLoggedIn") === "true";
   });
-  const [refreshKey, setRefreshKey] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [adminPasswordModal, setAdminPasswordModal] = useState(false);
   const [adminPasswordInput, setAdminPasswordInput] = useState("");
@@ -277,7 +276,7 @@ function AppContent() {
         }
       `}</style>
 
-      <div key={refreshKey}>
+      <div>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/messages" element={<Messages />} />
