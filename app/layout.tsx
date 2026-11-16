@@ -3,8 +3,11 @@ import { Toaster } from 'react-hot-toast'
 import './styles.css'
 import Navigation from './navigation'
 import Footer from './footer'
+import { baseMetadata } from '@/lib/metadata'
 
 const lora = Lora({ subsets: ['latin'] })
+
+export const metadata = baseMetadata
 
 export default function RootLayout({
   children,
@@ -14,7 +17,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={lora.className}>
       <head>
-        <title>Annie Memorial</title>
         <meta name="description" content="Share memories and messages" />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
