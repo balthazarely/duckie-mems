@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { createClient } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
+import duckLogo from './images/duck_image.png'
 import { ConfirmModal } from './ConfirmModal'
 import { Lightbox } from './Lightbox'
 
@@ -270,7 +271,9 @@ export function Messages() {
         <Link
           to="/share"
           style={{
-            display: 'inline-block',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.6rem',
             marginTop: '1rem',
             background: '#333',
             color: 'white',
@@ -279,6 +282,15 @@ export function Messages() {
             textDecoration: 'none',
           }}
         >
+          <img
+            src={duckLogo}
+            alt="Duck"
+            style={{
+              height: '16px',
+              width: 'auto',
+              filter: 'brightness(0) invert(1)',
+            }}
+          />
           Share a Memory
         </Link>
       </header>

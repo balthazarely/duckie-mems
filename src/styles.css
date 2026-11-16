@@ -9,6 +9,7 @@ body {
   background: #f3ede6;
   color: #333;
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 h1, h2, h3 {
@@ -19,6 +20,8 @@ h1, h2, h3 {
   max-width: 600px;
   margin: 0 auto;
   padding: 1.5rem;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 header {
@@ -295,6 +298,10 @@ nav {
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
   .image-grid {
     grid-template-columns: 1fr !important;
   }
@@ -303,5 +310,23 @@ nav {
   }
   .logo {
     display: flex !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .form-section {
+    padding: 1rem;
+  }
+
+  .post-content {
+    padding: 0.75rem;
   }
 }
