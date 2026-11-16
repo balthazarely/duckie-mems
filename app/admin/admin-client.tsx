@@ -1,12 +1,13 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import NextImage from 'next/image'
 import toast from 'react-hot-toast'
-import { ConfirmModal } from '../components/ConfirmModal'
+import { ConfirmModal } from '@/app/components/ConfirmModal'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 interface Post {
   id: string
@@ -25,22 +26,20 @@ interface Comment {
   message: string
 }
 
-export function Admin({
-  onLogout,
-}: {
-  onLogout: () => void
-}) {
+export default function AdminClient() {
   const [posts, setPosts] = useState<Post[]>([])
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
+  const router = useRouter()
 
   const [editingPost, setEditingPost] = useState<string | null>(null)
   const [editingPostData, setEditingPostData] = useState<Partial<Post>>({})
   const [editingPostFile, setEditingPostFile] = useState<File | null>(null)
 
-  const [galleryPhotos, setGalleryPhotos] = useState<Array<{ id: string; image_url: string; caption: string | null }>>([])
+  const [galleryPhotos, setGalleryPhotos] = useState<Array<{ id: string; image_id: string }>>([])
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
   const [uploadingGallery, setUploadingGallery] = useState(false)
 
@@ -60,6 +59,12 @@ export function Admin({
   })
 
   useEffect(() => {
+    const adminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true'
+    if (!adminLoggedIn) {
+      router.push('/')
+      return
+    }
+    setIsAdmin(true)
     fetchData()
   }, [])
 
@@ -108,17 +113,32 @@ export function Admin({
       setSuccess('')
 
       const post = posts.find((p) => p.id === confirmDelete.id)
-      if (post?.image_url) {
-        try {
+      if (post) {
+        const imagesToDelete: string[] = []
+
+        // Collect all image paths to delete
+        if (post.image_url) {
           const path = post.image_url.split('/storage/v1/object/public/photos/')[1]
-          if (path) {
+          if (path) imagesToDelete.push(path)
+        }
+
+        if (post.image_urls && post.image_urls.length > 0) {
+          post.image_urls.forEach((url) => {
+            const path = url.split('/storage/v1/object/public/photos/')[1]
+            if (path) imagesToDelete.push(path)
+          })
+        }
+
+        // Delete all images from storage
+        if (imagesToDelete.length > 0) {
+          try {
             await supabase.storage
               .from('photos')
-              .remove([path])
+              .remove(imagesToDelete)
               .catch(() => {})
+          } catch (err) {
+            console.error('Error deleting images:', err)
           }
-        } catch (err) {
-          console.error('Error deleting image:', err)
         }
       }
 
@@ -182,6 +202,7 @@ export function Admin({
       setSuccess('')
 
       let imageUrl = editingPostData.image_url
+      let imageUrls = editingPostData.image_urls
 
       if (editingPostFile) {
         const resizedBlob = await resizeImage(editingPostFile)
@@ -196,7 +217,14 @@ export function Admin({
 
         if (uploadError) throw uploadError
 
-        imageUrl = `${supabaseUrl}/storage/v1/object/public/photos/${uploadData.path}`
+        const newImageUrl = `${supabaseUrl}/storage/v1/object/public/photos/${uploadData.path}`
+
+        if (imageUrls && imageUrls.length > 0) {
+          imageUrls = [newImageUrl, ...imageUrls]
+        } else {
+          imageUrl = newImageUrl
+          imageUrls = null
+        }
       }
 
       const { error: err } = await supabase
@@ -205,6 +233,7 @@ export function Admin({
           name: editingPostData.name,
           caption: editingPostData.caption,
           image_url: imageUrl,
+          image_urls: imageUrls,
         })
         .eq('id', postId)
 
@@ -266,7 +295,7 @@ export function Admin({
     try {
       setUploadingGallery(true)
 
-      const imageUrls: string[] = []
+      const imageIds: string[] = []
 
       for (const file of galleryFiles) {
         const fileName = `gallery-${Date.now()}-${Math.random().toString(36).substring(7)}`
@@ -280,22 +309,19 @@ export function Admin({
 
         if (uploadError) throw uploadError
 
-        imageUrls.push(
-          `${supabaseUrl}/storage/v1/object/public/photos/${uploadData.path}`
-        )
+        imageIds.push(uploadData.path)
       }
 
       const { error: insertError } = await supabase.from('gallery_photos').insert(
-        imageUrls.map((url) => ({
-          image_url: url,
-          caption: null,
+        imageIds.map((imageId) => ({
+          image_id: imageId,
         }))
       )
 
       if (insertError) throw insertError
 
       setGalleryFiles([])
-      setSuccess(`${imageUrls.length} photo${imageUrls.length !== 1 ? 's' : ''} added to gallery`)
+      setSuccess(`${imageIds.length} photo${imageIds.length !== 1 ? 's' : ''} added to gallery`)
       await fetchData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload photos')
@@ -322,13 +348,13 @@ export function Admin({
       setSuccess('')
 
       const photo = galleryPhotos.find((p) => p.id === confirmDelete.id)
-      if (photo?.image_url) {
-        const path = photo.image_url.split('/storage/v1/object/public/photos/')[1]
-        if (path) {
+      if (photo?.image_id) {
+        try {
           await supabase.storage
             .from('photos')
-            .remove([path])
-            .catch(() => {})
+            .remove([photo.image_id])
+        } catch (err) {
+          console.error('Error deleting image:', err)
         }
       }
 
@@ -381,12 +407,25 @@ export function Admin({
     })
   }
 
+  if (!isAdmin || loading) {
+    return (
+      <div className="container">
+        <header>
+          <h1>Admin Panel</h1>
+        </header>
+      </div>
+    )
+  }
+
   return (
     <div className="container">
       <header>
         <h1>Admin Panel</h1>
         <button
-          onClick={onLogout}
+          onClick={() => {
+            localStorage.removeItem('adminLoggedIn')
+            router.push('/')
+          }}
           style={{
             marginTop: '1rem',
             background: '#666',
@@ -444,9 +483,88 @@ export function Admin({
                           }
                           style={{ width: '100%', marginBottom: '0.5rem' }}
                         />
+
+                        {(() => {
+                          const images = editingPostData.image_urls && editingPostData.image_urls.length > 0
+                            ? editingPostData.image_urls
+                            : editingPostData.image_url ? [editingPostData.image_url] : []
+                          return images.length > 0 ? (
+                            <div style={{ marginBottom: '0.5rem' }}>
+                              <div style={{ fontSize: '0.9rem', marginBottom: '0.3rem' }}>Current photos:</div>
+                              <div
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                                  gap: '0.4rem',
+                                  marginBottom: '0.5rem',
+                                }}
+                              >
+                                {images.map((url: string, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    style={{
+                                      position: 'relative',
+                                      aspectRatio: '1',
+                                      borderRadius: '4px',
+                                      overflow: 'hidden',
+                                    }}
+                                  >
+                                    <img
+                                      src={url}
+                                      alt={`Photo ${idx + 1}`}
+                                      style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        objectFit: 'cover',
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updatedImages = images.filter((_, i) => i !== idx)
+                                        if (updatedImages.length === 0) {
+                                          setEditingPostData({
+                                            ...editingPostData,
+                                            image_url: null,
+                                            image_urls: null,
+                                          })
+                                        } else {
+                                          setEditingPostData({
+                                            ...editingPostData,
+                                            image_url: updatedImages[0],
+                                            image_urls: updatedImages.length > 1 ? updatedImages : null,
+                                          })
+                                        }
+                                      }}
+                                      style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        right: 0,
+                                        background: '#c33',
+                                        color: 'white',
+                                        border: 'none',
+                                        width: '20px',
+                                        height: '20px',
+                                        padding: 0,
+                                        cursor: 'pointer',
+                                        fontSize: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                      }}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null
+                        })()}
+
                         <div style={{ marginBottom: '0.5rem' }}>
                           <label htmlFor={`edit-photo-${post.id}`} style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                            Replace photo (optional)
+                            Add/Replace photo (optional)
                           </label>
                           <input
                             id={`edit-photo-${post.id}`}
@@ -518,7 +636,102 @@ export function Admin({
                             ))
                           })()}
                         </div>
-                        <div>
+                        {(() => {
+                          const postComments = comments.filter((c) => c.post_id === post.id)
+                          return (
+                            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #ddd' }}>
+                              <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
+                                Comments ({postComments.length})
+                              </div>
+                              {postComments.length === 0 ? (
+                                <div style={{ color: '#aaa', fontSize: '0.85rem' }}>No comments yet</div>
+                              ) : (
+                                postComments.map((comment) => (
+                                  <div
+                                    key={comment.id}
+                                    style={{
+                                      marginBottom: '0.75rem',
+                                      padding: '0.5rem',
+                                      background: '#f5f5f5',
+                                      borderRadius: '3px',
+                                      fontSize: '0.85rem',
+                                    }}
+                                  >
+                                    {editingComment === comment.id ? (
+                                      <>
+                                        <input
+                                          type="text"
+                                          maxLength={80}
+                                          value={editingCommentData.name}
+                                          onChange={(e) =>
+                                            setEditingCommentData({
+                                              ...editingCommentData,
+                                              name: e.target.value,
+                                            })
+                                          }
+                                          style={{ width: '100%', marginBottom: '0.3rem', fontSize: '0.85rem' }}
+                                        />
+                                        <textarea
+                                          maxLength={1000}
+                                          value={editingCommentData.message}
+                                          onChange={(e) =>
+                                            setEditingCommentData({
+                                              ...editingCommentData,
+                                              message: e.target.value,
+                                            })
+                                          }
+                                          style={{ width: '100%', marginBottom: '0.3rem', fontSize: '0.85rem' }}
+                                        />
+                                        <button
+                                          onClick={() => saveCommentEdit(comment.id)}
+                                          style={{ marginRight: '0.3rem', fontSize: '0.8rem', padding: '0.2rem 0.5rem' }}
+                                        >
+                                          Save
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingComment(null)}
+                                          style={{ background: '#999', fontSize: '0.8rem', padding: '0.2rem 0.5rem' }}
+                                        >
+                                          Cancel
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div style={{ marginBottom: '0.2rem' }}>
+                                          <strong>{comment.name}</strong>{' '}
+                                          <span style={{ color: '#999', fontSize: '0.75rem' }}>
+                                            {formatDate(comment.created_at)}
+                                          </span>
+                                        </div>
+                                        <div style={{ marginBottom: '0.3rem', color: '#555' }}>
+                                          {comment.message}
+                                        </div>
+                                        <div style={{ marginTop: '0.3rem' }}>
+                                          <button
+                                            onClick={() => {
+                                              setEditingComment(comment.id)
+                                              setEditingCommentData(comment)
+                                            }}
+                                            style={{ marginRight: '0.3rem', fontSize: '0.75rem', padding: '0.2rem 0.4rem' }}
+                                          >
+                                            Edit
+                                          </button>
+                                          <button
+                                            onClick={() => deleteComment(comment.id)}
+                                            style={{ background: '#c33', fontSize: '0.75rem', padding: '0.2rem 0.4rem' }}
+                                          >
+                                            Delete
+                                          </button>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )
+                        })()}
+                        <div style={{ marginTop: '0.5rem' }}>
                           <button
                             onClick={() => {
                               setEditingPost(post.id)
@@ -526,122 +739,19 @@ export function Admin({
                             }}
                             style={{ marginRight: '0.5rem' }}
                           >
-                            Edit
+                            Edit Post
                           </button>
                           <button
                             onClick={() => deletePost(post.id)}
                             style={{ background: '#c33' }}
                           >
-                            Delete
+                            Delete Post
                           </button>
                         </div>
                       </>
                     )}
                   </div>
                 ))
-              )}
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h2>Comments ({comments.length})</h2>
-            <div style={{ marginTop: '1rem' }}>
-              {comments.length === 0 ? (
-                <p>No comments</p>
-              ) : (
-                comments.map((comment) => {
-                  const post = posts.find((p) => p.id === comment.post_id)
-                  return (
-                    <div
-                      key={comment.id}
-                      style={{
-                        marginBottom: '1rem',
-                        padding: '0.75rem',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px',
-                        background: '#f9f9f9',
-                      }}
-                    >
-                      {editingComment === comment.id ? (
-                        <>
-                          <input
-                            type="text"
-                            maxLength={80}
-                            value={editingCommentData.name}
-                            onChange={(e) =>
-                              setEditingCommentData({
-                                ...editingCommentData,
-                                name: e.target.value,
-                              })
-                            }
-                            style={{ width: '100%', marginBottom: '0.5rem' }}
-                          />
-                          <textarea
-                            maxLength={1000}
-                            value={editingCommentData.message}
-                            onChange={(e) =>
-                              setEditingCommentData({
-                                ...editingCommentData,
-                                message: e.target.value,
-                              })
-                            }
-                            style={{ width: '100%', marginBottom: '0.5rem' }}
-                          />
-                          <button
-                            onClick={() => saveCommentEdit(comment.id)}
-                            style={{ marginRight: '0.5rem' }}
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditingComment(null)}
-                            style={{ background: '#999' }}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <div style={{ marginBottom: '0.3rem' }}>
-                            <strong>{comment.name}</strong>{' '}
-                            <span style={{ color: '#999', fontSize: '0.8rem' }}>
-                              {formatDate(comment.created_at)}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              marginBottom: '0.5rem',
-                              fontSize: '0.9rem',
-                              color: '#555',
-                            }}
-                          >
-                            {comment.message}
-                          </div>
-                          <div style={{ fontSize: '0.8rem', color: '#999' }}>
-                            on "{post?.name || 'deleted post'}"
-                          </div>
-                          <div style={{ marginTop: '0.5rem' }}>
-                            <button
-                              onClick={() => {
-                                setEditingComment(comment.id)
-                                setEditingCommentData(comment)
-                              }}
-                              style={{ marginRight: '0.5rem' }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => deleteComment(comment.id)}
-                              style={{ background: '#c33' }}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )
-                })
               )}
             </div>
           </div>
@@ -746,22 +856,17 @@ export function Admin({
               >
                 {galleryPhotos.map((photo) => (
                   <div key={photo.id} style={{ position: 'relative' }}>
-                    <img
-                      src={photo.image_url}
-                      alt={photo.caption || 'gallery photo'}
-                      loading="lazy"
+                    <NextImage
+                      src={`${supabaseUrl}/storage/v1/object/public/photos/${photo.image_id}`}
+                      alt="gallery photo"
+                      width={150}
+                      height={150}
                       style={{
                         width: '100%',
-                        height: '150px',
-                        objectFit: 'cover',
+                        height: 'auto',
                         borderRadius: '4px',
                       }}
                     />
-                    {photo.caption && (
-                      <div style={{ fontSize: '0.8rem', marginTop: '0.3rem', color: '#555' }}>
-                        {photo.caption}
-                      </div>
-                    )}
                     <button
                       onClick={() => deleteGalleryPhoto(photo.id)}
                       style={{

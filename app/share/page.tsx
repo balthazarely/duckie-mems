@@ -1,22 +1,22 @@
+"use client";
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 import imageCompression from "browser-image-compression";
 import toast from "react-hot-toast";
+import { supabase } from "@/lib/supabase";
+import { DuckLoader } from "@/app/components/DuckLoader";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export function SharePage() {
+export default function SharePage() {
   const [formName, setFormName] = useState("");
   const [formCaption, setFormCaption] = useState("");
   const [formFiles, setFormFiles] = useState<File[]>([]);
   const [formWebsite, setFormWebsite] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const router = useRouter();
 
   async function resizeImage(file: File): Promise<Blob> {
     try {
@@ -37,7 +37,7 @@ export function SharePage() {
 
     if (formWebsite.trim()) {
       toast.success("Memory shared!");
-      navigate("/messages");
+      router.push("/messages");
       return;
     }
 
@@ -112,7 +112,7 @@ export function SharePage() {
       }
 
       toast.success("Memory shared!");
-      navigate("/messages");
+      router.push("/messages");
     } catch (err) {
       console.error("Error posting:", err);
       const errorMsg =
@@ -128,9 +128,6 @@ export function SharePage() {
     <div className="container">
       <header>
         <h1>Share a Memory</h1>
-        <p style={{ color: "#666", fontSize: "0.95rem", marginTop: "0.5rem" }}>
-          Tell us about your favorite memory with Annie.
-        </p>
       </header>
 
       {error && <div className="error">{error}</div>}
@@ -160,7 +157,13 @@ export function SharePage() {
               disabled={loading}
               required
             />
-            <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.25rem' }}>
+            <p
+              style={{
+                fontSize: "0.8rem",
+                color: "#999",
+                marginTop: "0.25rem",
+              }}
+            >
               {formName.length}/80 characters
             </p>
           </div>
@@ -176,7 +179,13 @@ export function SharePage() {
               disabled={loading}
               style={{ minHeight: "120px" }}
             />
-            <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.25rem' }}>
+            <p
+              style={{
+                fontSize: "0.8rem",
+                color: "#999",
+                marginTop: "0.25rem",
+              }}
+            >
               {formCaption.length}/2000 characters
             </p>
           </div>
@@ -194,7 +203,7 @@ export function SharePage() {
                 setFormFiles((prev) => {
                   const combined = [...prev, ...newFiles];
                   if (combined.length > 3) {
-                    toast.error('Maximum 3 photos allowed');
+                    toast.error("Maximum 3 photos allowed");
                     return prev;
                   }
                   return combined;
@@ -279,32 +288,22 @@ export function SharePage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/messages")}
+              onClick={() => router.push("/messages")}
               style={{ background: "#999" }}
               disabled={loading}
             >
               Cancel
             </button>
             {loading && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  color: "#666",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "1.2rem",
-                    animation: "spin 1s linear infinite",
-                  }}
-                >
-                  ⟳
-                </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <div style={{ transform: "scale(0.6)" }}>
+                  <DuckLoader />
+                </div>
                 <div style={{ fontSize: "0.9rem" }}>
                   <div>Uploading...</div>
-                  <div style={{ fontSize: "0.8rem", color: "#999" }}>This may take a moment</div>
+                  <div style={{ fontSize: "0.8rem", color: "#999" }}>
+                    This may take a moment
+                  </div>
                 </div>
               </div>
             )}

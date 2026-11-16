@@ -1,14 +1,14 @@
-import duckLogo from '../images/duck_image.png'
-
-export function DuckLoader() {
+export function DuckLoader({ withPadding = false }: { withPadding?: boolean } = {}) {
   return (
     <div
       style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '3rem 0',
-        minHeight: '200px',
+        ...(withPadding && {
+          padding: '3rem 0',
+          minHeight: '200px',
+        }),
       }}
     >
       <div style={{ position: 'relative', width: '80px', height: '80px' }}>
@@ -27,7 +27,7 @@ export function DuckLoader() {
 
         {/* Pulsating duck */}
         <img
-          src={duckLogo}
+          src="/duck_image.png"
           alt="Loading"
           style={{
             position: 'absolute',
