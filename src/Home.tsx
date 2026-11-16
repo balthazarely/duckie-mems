@@ -1,6 +1,7 @@
 import duckWineImage from "./images/duck-wine-cropped.jpeg";
 import duckDogImage from "./images/duck-dog.jpeg";
 import duckKidsImage from "./images/duck-kids.jpeg";
+import duckLogo from "./images/duck_image.png";
 
 export function Home() {
   return (
@@ -41,6 +42,7 @@ export function Home() {
             gridTemplateColumns: "1fr 1fr",
             gap: "1.5rem",
             marginTop: "2rem",
+            marginBottom: "2rem",
           }}
           className="image-grid"
         >
@@ -60,6 +62,36 @@ export function Home() {
               borderRadius: "8px",
             }}
           />
+        </div>
+
+        <div style={{ textAlign: "center" }}>
+          <a
+            href="/annis-farewell.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              background: "#333",
+              color: "white",
+              padding: "0.8rem 1.5rem",
+              borderRadius: "4px",
+              textDecoration: "none",
+              fontSize: "0.95rem",
+            }}
+          >
+            <img
+              src={duckLogo}
+              alt="Duck"
+              style={{
+                height: "20px",
+                width: "auto",
+                filter: "brightness(0) invert(1)",
+              }}
+            />
+            Print Version
+          </a>
         </div>
       </header>
     </div>

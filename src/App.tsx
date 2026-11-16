@@ -192,7 +192,7 @@ function AppContent() {
             }}
           >
             <img
-              src="/duck_image.png"
+              src={duckLogo}
               alt="Logo"
               style={{
                 height: "40px",
