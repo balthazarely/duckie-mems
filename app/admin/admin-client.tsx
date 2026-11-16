@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import NextImage from 'next/image'
 import toast from 'react-hot-toast'
 import { ConfirmModal } from '@/app/components/ConfirmModal'
+import { DuckLoader } from '@/app/components/DuckLoader'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -407,12 +408,23 @@ export default function AdminClient() {
     })
   }
 
-  if (!isAdmin || loading) {
+  if (!isAdmin) {
     return (
       <div className="container">
         <header>
           <h1>Admin Panel</h1>
         </header>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="container">
+        <header>
+          <h1>Admin Panel</h1>
+        </header>
+        <DuckLoader withPadding />
       </div>
     )
   }
@@ -438,11 +450,8 @@ export default function AdminClient() {
       {error && <div className="error">{error}</div>}
       {success && <div className="success">{success}</div>}
 
-      {loading ? (
-        <div className="loading">Loading...</div>
-      ) : (
-        <>
-          <div className="form-section">
+      <>
+        <div className="form-section">
             <h2>Posts ({posts.length})</h2>
             <div style={{ marginTop: '1rem' }}>
               {posts.length === 0 ? (
@@ -889,8 +898,7 @@ export default function AdminClient() {
               </div>
             )}
           </div>
-        </>
-      )}
+      </>
 
       <ConfirmModal
         isOpen={confirmDelete.isOpen}

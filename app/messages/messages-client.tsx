@@ -67,6 +67,8 @@ export default function MessagesClient() {
     initialIndex: 0,
   });
 
+  const [shareButtonHovered, setShareButtonHovered] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchData();
@@ -296,6 +298,8 @@ export default function MessagesClient() {
         </p>
         <Link
           href="/share"
+          onMouseEnter={() => setShareButtonHovered(true)}
+          onMouseLeave={() => setShareButtonHovered(false)}
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -306,6 +310,8 @@ export default function MessagesClient() {
             padding: "0.5rem 1rem",
             borderRadius: "4px",
             textDecoration: "none",
+            opacity: shareButtonHovered ? 0.85 : 1,
+            transition: "opacity 0.2s ease",
           }}
         >
           <img

@@ -2,36 +2,42 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-
-const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD
+import { verifyAdminPassword } from '@/app/actions/auth'
 
 export default function Footer() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminPasswordModal, setAdminPasswordModal] = useState(false)
   const [adminPasswordInput, setAdminPasswordInput] = useState('')
-  const [mounted, setMounted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    setMounted(true)
     const adminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true'
     setIsAdmin(adminLoggedIn)
   }, [])
 
-  const handleAdminLogin = () => {
-    if (adminPasswordInput === adminPassword) {
-      setIsAdmin(true)
-      localStorage.setItem('adminLoggedIn', 'true')
-      setAdminPasswordModal(false)
+  const handleAdminLogin = async () => {
+    try {
+      setIsLoading(true)
+      const isValid = await verifyAdminPassword(adminPasswordInput)
+
+      if (isValid) {
+        setIsAdmin(true)
+        localStorage.setItem('adminLoggedIn', 'true')
+        setAdminPasswordModal(false)
+        setAdminPasswordInput('')
+        router.push('/admin')
+      } else {
+        alert('Incorrect password')
+        setAdminPasswordInput('')
+      }
+    } catch (err) {
+      alert('Authentication failed')
       setAdminPasswordInput('')
-      router.push('/admin')
-    } else {
-      alert('Incorrect password')
-      setAdminPasswordInput('')
+    } finally {
+      setIsLoading(false)
     }
   }
-
-  if (!mounted) return null
 
   return (
     <>
@@ -48,8 +54,11 @@ export default function Footer() {
         }}
       >
         <button
-          onClick={() => {
-            if (isAdmin) {
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            const adminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true'
+            if (adminLoggedIn) {
               router.push('/admin')
             } else {
               setAdminPasswordModal(true)
@@ -143,16 +152,18 @@ export default function Footer() {
               </button>
               <button
                 onClick={handleAdminLogin}
+                disabled={isLoading}
                 style={{
                   background: '#333',
                   color: 'white',
                   border: 'none',
                   padding: '0.6rem 1rem',
                   borderRadius: '4px',
-                  cursor: 'pointer',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.6 : 1,
                 }}
               >
-                Login
+                {isLoading ? 'Verifying...' : 'Login'}
               </button>
             </div>
           </div>

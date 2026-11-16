@@ -1,6 +1,11 @@
+'use client'
+
 import Image from 'next/image'
+import { useState } from 'react'
 
 export default function Home() {
+  const [shareHovered, setShareHovered] = useState(false)
+
   return (
     <div className="container">
       <header>
@@ -105,6 +110,8 @@ export default function Home() {
         <div style={{ textAlign: "center", marginTop: "2rem" }}>
           <a
             href="/messages"
+            onMouseEnter={() => setShareHovered(true)}
+            onMouseLeave={() => setShareHovered(false)}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -115,6 +122,8 @@ export default function Home() {
               borderRadius: "4px",
               textDecoration: "none",
               fontSize: "0.95rem",
+              opacity: shareHovered ? 0.85 : 1,
+              transition: "opacity 0.2s ease",
             }}
           >
             <img
@@ -131,5 +140,5 @@ export default function Home() {
         </div>
       </header>
     </div>
-  );
+  )
 }
