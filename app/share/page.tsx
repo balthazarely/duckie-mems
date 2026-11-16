@@ -18,6 +18,12 @@ export default function SharePage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  const isFormValid = () => {
+    if (!formName.trim() || !/[a-zA-Z]/.test(formName)) return false;
+    if (!formCaption.trim() && formFiles.length === 0) return false;
+    return true;
+  };
+
   async function resizeImage(file: File): Promise<Blob> {
     try {
       const compressed = await imageCompression(file, {
@@ -42,17 +48,23 @@ export default function SharePage() {
     }
 
     if (!formName.trim()) {
-      setError("Name is required");
+      const msg = "Name is required";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (!/[a-zA-Z]/.test(formName)) {
-      setError("Name must contain at least one letter");
+      const msg = "Name must contain at least one letter";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (!formCaption.trim() && formFiles.length === 0) {
-      setError("Please share a memory or add photos");
+      const msg = "Please share a memory or add photos";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -156,6 +168,7 @@ export default function SharePage() {
               placeholder="Your name"
               disabled={loading}
               required
+              autoComplete="name"
             />
             <p
               style={{
@@ -196,7 +209,7 @@ export default function SharePage() {
               id="files"
               type="file"
               multiple
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp"
               disabled={loading}
               onChange={(e) => {
                 const newFiles = Array.from(e.target.files || []);
@@ -210,6 +223,9 @@ export default function SharePage() {
                 });
               }}
             />
+            <div style={{ fontSize: "0.85rem", color: "#999", marginTop: "0.5rem" }}>
+              Supported formats: JPG, PNG, GIF, WebP
+            </div>
           </div>
 
           {formFiles.length > 0 && (
@@ -283,7 +299,7 @@ export default function SharePage() {
               alignItems: "center",
             }}
           >
-            <button type="submit" disabled={loading}>
+            <button type="submit" disabled={loading || !isFormValid()}>
               {loading ? "Sharing..." : "Share Memory"}
             </button>
             <button
@@ -302,7 +318,7 @@ export default function SharePage() {
                 <div style={{ fontSize: "0.9rem" }}>
                   <div>Uploading...</div>
                   <div style={{ fontSize: "0.8rem", color: "#999" }}>
-                    This may take a moment
+                    Please stay on this page
                   </div>
                 </div>
               </div>

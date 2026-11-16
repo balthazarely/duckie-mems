@@ -1,14 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import NextImage from 'next/image'
+import Image from 'next/image'
 import toast from 'react-hot-toast'
 import { ConfirmModal } from '@/app/components/ConfirmModal'
 import { DuckLoader } from '@/app/components/DuckLoader'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 interface Post {
   id: string
@@ -31,25 +29,19 @@ export default function AdminClient() {
   const [posts, setPosts] = useState<Post[]>([])
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
 
   const [editingPost, setEditingPost] = useState<string | null>(null)
   const [editingPostData, setEditingPostData] = useState<Partial<Post>>({})
-  const [editingPostFile, setEditingPostFile] = useState<File | null>(null)
 
-  const [galleryPhotos, setGalleryPhotos] = useState<Array<{ id: string; image_id: string }>>([])
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([])
-  const [uploadingGallery, setUploadingGallery] = useState(false)
 
   const [editingComment, setEditingComment] = useState<string | null>(null)
   const [editingCommentData, setEditingCommentData] = useState<Partial<Comment>>({})
 
   const [confirmDelete, setConfirmDelete] = useState<{
     isOpen: boolean
-    type: 'post' | 'comment' | 'gallery' | null
+    type: 'post' | 'comment' | null
     id: string | null
     isDeleting: boolean
   }>({
@@ -81,14 +73,8 @@ export default function AdminClient() {
         .select('*')
         .order('created_at', { ascending: true })
 
-      const { data: galleryData } = await supabase
-        .from('gallery_photos')
-        .select('*')
-        .order('created_at', { ascending: false })
-
       setPosts(postsData || [])
       setComments(commentsData || [])
-      setGalleryPhotos(galleryData || [])
     } catch (err) {
       setError('Failed to load data')
     } finally {
@@ -110,8 +96,6 @@ export default function AdminClient() {
 
     try {
       setConfirmDelete((prev) => ({ ...prev, isDeleting: true }))
-      setError('')
-      setSuccess('')
 
       const post = posts.find((p) => p.id === confirmDelete.id)
       if (post) {
@@ -160,92 +144,69 @@ export default function AdminClient() {
     }
   }
 
-  async function resizeImage(file: File): Promise<Blob> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const img = new Image()
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          let width = img.width
-          let height = img.height
-
-          if (width > 1600) {
-            height = (height * 1600) / width
-            width = 1600
-          }
-
-          canvas.width = width
-          canvas.height = height
-          const ctx = canvas.getContext('2d')
-          if (!ctx) {
-            reject(new Error('Could not get canvas context'))
-            return
-          }
-          ctx.drawImage(img, 0, 0, width, height)
-
-          canvas.toBlob((blob) => {
-            if (blob) resolve(blob)
-            else reject(new Error('Could not resize image'))
-          }, 'image/jpeg', 0.85)
-        }
-        img.onerror = () => reject(new Error('Could not load image'))
-        img.src = e.target?.result as string
-      }
-      reader.onerror = () => reject(new Error('Could not read file'))
-      reader.readAsDataURL(file)
-    })
-  }
-
-  async function savePostEdit(postId: string) {
+async function savePostEdit(postId: string) {
     try {
-      setError('')
-      setSuccess('')
 
-      let imageUrl = editingPostData.image_url
-      let imageUrls = editingPostData.image_urls
+      const originalPost = posts.find((p) => p.id === postId)
+      if (!originalPost) throw new Error('Post not found')
 
-      if (editingPostFile) {
-        const resizedBlob = await resizeImage(editingPostFile)
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}`
-        const fileExt = editingPostFile.type.split('/')[1] || 'jpg'
+      // Collect image URLs that are being removed
+      const originalImages: string[] = []
+      if (originalPost.image_url) originalImages.push(originalPost.image_url)
+      if (originalPost.image_urls) originalImages.push(...originalPost.image_urls)
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('photos')
-          .upload(`public/${fileName}.${fileExt}`, resizedBlob, {
-            contentType: editingPostFile.type,
-          })
+      const newImages: string[] = []
+      if (editingPostData.image_url) newImages.push(editingPostData.image_url)
+      if (editingPostData.image_urls) newImages.push(...editingPostData.image_urls)
 
-        if (uploadError) throw uploadError
+      const imagesToDelete = originalImages.filter((url) => !newImages.includes(url))
 
-        const newImageUrl = `${supabaseUrl}/storage/v1/object/public/photos/${uploadData.path}`
+      // Delete removed images from storage
+      if (imagesToDelete.length > 0) {
+        const pathsToDelete = imagesToDelete
+          .map((url) => url.split('/storage/v1/object/public/photos/')[1])
+          .filter(Boolean)
 
-        if (imageUrls && imageUrls.length > 0) {
-          imageUrls = [newImageUrl, ...imageUrls]
-        } else {
-          imageUrl = newImageUrl
-          imageUrls = null
+        if (pathsToDelete.length > 0) {
+          try {
+            await supabase.storage
+              .from('photos')
+              .remove(pathsToDelete)
+          } catch (err) {
+            console.error('Error deleting images:', err)
+          }
         }
+      }
+
+      const updateData: any = {
+        name: editingPostData.name,
+        caption: editingPostData.caption,
+      }
+
+      if (editingPostData.image_urls && editingPostData.image_urls.length > 0) {
+        updateData.image_url = null
+        updateData.image_urls = editingPostData.image_urls
+      } else if (editingPostData.image_url) {
+        updateData.image_url = editingPostData.image_url
+        updateData.image_urls = null
+      } else {
+        updateData.image_url = null
+        updateData.image_urls = null
       }
 
       const { error: err } = await supabase
         .from('posts')
-        .update({
-          name: editingPostData.name,
-          caption: editingPostData.caption,
-          image_url: imageUrl,
-          image_urls: imageUrls,
-        })
+        .update(updateData)
         .eq('id', postId)
 
       if (err) throw err
 
       setEditingPost(null)
-      setEditingPostFile(null)
-      setSuccess('Post updated')
+      toast.success('Post updated')
       await fetchData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update post')
+      const errorMsg = err instanceof Error ? err.message : 'Failed to update post'
+      toast.error(errorMsg)
     }
   }
 
@@ -263,8 +224,6 @@ export default function AdminClient() {
 
     try {
       setConfirmDelete((prev) => ({ ...prev, isDeleting: true }))
-      setError('')
-      setSuccess('')
 
       const { error: err } = await supabase
         .from('comments')
@@ -283,104 +242,8 @@ export default function AdminClient() {
     }
   }
 
-  async function handleUploadGalleryPhoto(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
-
-    if (galleryFiles.length === 0) {
-      setError('Please select photos')
-      return
-    }
-
+async function saveCommentEdit(commentId: string) {
     try {
-      setUploadingGallery(true)
-
-      const imageIds: string[] = []
-
-      for (const file of galleryFiles) {
-        const fileName = `gallery-${Date.now()}-${Math.random().toString(36).substring(7)}`
-        const fileExt = file.type.split('/')[1] || 'jpg'
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('photos')
-          .upload(`public/gallery/${fileName}.${fileExt}`, file, {
-            contentType: file.type,
-          })
-
-        if (uploadError) throw uploadError
-
-        imageIds.push(uploadData.path)
-      }
-
-      const { error: insertError } = await supabase.from('gallery_photos').insert(
-        imageIds.map((imageId) => ({
-          image_id: imageId,
-        }))
-      )
-
-      if (insertError) throw insertError
-
-      setGalleryFiles([])
-      setSuccess(`${imageIds.length} photo${imageIds.length !== 1 ? 's' : ''} added to gallery`)
-      await fetchData()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload photos')
-    } finally {
-      setUploadingGallery(false)
-    }
-  }
-
-  async function deleteGalleryPhoto(photoId: string) {
-    setConfirmDelete({
-      isOpen: true,
-      type: 'gallery',
-      id: photoId,
-      isDeleting: false,
-    })
-  }
-
-  async function confirmDeleteGalleryPhoto() {
-    if (!confirmDelete.id) return
-
-    try {
-      setConfirmDelete((prev) => ({ ...prev, isDeleting: true }))
-      setError('')
-      setSuccess('')
-
-      const photo = galleryPhotos.find((p) => p.id === confirmDelete.id)
-      if (photo?.image_id) {
-        try {
-          await supabase.storage
-            .from('photos')
-            .remove([photo.image_id])
-        } catch (err) {
-          console.error('Error deleting image:', err)
-        }
-      }
-
-      const { error: err } = await supabase
-        .from('gallery_photos')
-        .delete()
-        .eq('id', confirmDelete.id)
-
-      if (err) throw err
-
-      toast.success('Photo deleted')
-      setConfirmDelete({ isOpen: false, type: null, id: null, isDeleting: false })
-      await fetchData()
-    } catch (err) {
-      setConfirmDelete((prev) => ({ ...prev, isDeleting: false }))
-      const errorMsg = err instanceof Error ? err.message : 'Failed to delete photo'
-      toast.error(errorMsg)
-    }
-  }
-
-  async function saveCommentEdit(commentId: string) {
-    try {
-      setError('')
-      setSuccess('')
-
       const { error: err } = await supabase
         .from('comments')
         .update({
@@ -392,10 +255,11 @@ export default function AdminClient() {
       if (err) throw err
 
       setEditingComment(null)
-      setSuccess('Comment updated')
+      toast.success('Comment updated')
       await fetchData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update comment')
+      const errorMsg = err instanceof Error ? err.message : 'Failed to update comment'
+      toast.error(errorMsg)
     }
   }
 
@@ -447,8 +311,6 @@ export default function AdminClient() {
         </button>
       </header>
 
-      {error && <div className="error">{error}</div>}
-      {success && <div className="success">{success}</div>}
 
       <>
         <div className="form-section">
@@ -518,12 +380,13 @@ export default function AdminClient() {
                                       overflow: 'hidden',
                                     }}
                                   >
-                                    <img
+                                    <Image
                                       src={url}
                                       alt={`Photo ${idx + 1}`}
+                                      fill
+                                      sizes="80px"
+                                      quality={50}
                                       style={{
-                                        width: '100%',
-                                        height: '100%',
                                         objectFit: 'cover',
                                       }}
                                     />
@@ -571,19 +434,7 @@ export default function AdminClient() {
                           ) : null
                         })()}
 
-                        <div style={{ marginBottom: '0.5rem' }}>
-                          <label htmlFor={`edit-photo-${post.id}`} style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>
-                            Add/Replace photo (optional)
-                          </label>
-                          <input
-                            id={`edit-photo-${post.id}`}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setEditingPostFile(e.target.files?.[0] || null)}
-                            style={{ fontSize: '0.9rem' }}
-                          />
-                        </div>
-                        <button
+<button
                           onClick={() => savePostEdit(post.id)}
                           style={{ marginRight: '0.5rem' }}
                         >
@@ -592,7 +443,6 @@ export default function AdminClient() {
                         <button
                           onClick={() => {
                             setEditingPost(null)
-                            setEditingPostFile(null)
                           }}
                           style={{ background: '#999' }}
                         >
@@ -601,11 +451,53 @@ export default function AdminClient() {
                       </>
                     ) : (
                       <>
-                        <div style={{ marginBottom: '0.5rem' }}>
-                          <strong>{post.name}</strong>{' '}
-                          <span style={{ color: '#999', fontSize: '0.85rem' }}>
-                            {formatDate(post.created_at)}
-                          </span>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '0.5rem',
+                          }}
+                        >
+                          <div>
+                            <strong>{post.name}</strong>{' '}
+                            <span style={{ color: '#999', fontSize: '0.85rem' }}>
+                              {formatDate(post.created_at)}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => {
+                                setEditingPost(post.id)
+                                setEditingPostData(post)
+                              }}
+                              style={{
+                                fontSize: '0.75rem',
+                                padding: '0.4rem 0.6rem',
+                                background: '#333',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '3px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deletePost(post.id)}
+                              style={{
+                                fontSize: '0.75rem',
+                                padding: '0.4rem 0.6rem',
+                                background: '#c33',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '3px',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                         {post.caption && (
                           <div
@@ -631,17 +523,27 @@ export default function AdminClient() {
                               ? post.image_urls
                               : post.image_url ? [post.image_url] : []
                             return images.map((url: string, idx: number) => (
-                              <img
+                              <div
                                 key={idx}
-                                src={url}
-                                alt={`${post.name} ${idx + 1}`}
                                 style={{
+                                  position: 'relative',
                                   width: '100%',
                                   height: '100px',
-                                  objectFit: 'cover',
                                   borderRadius: '4px',
+                                  overflow: 'hidden',
                                 }}
-                              />
+                              >
+                                <Image
+                                  src={url}
+                                  alt={`${post.name} ${idx + 1}`}
+                                  fill
+                                  sizes="100px"
+                                  quality={50}
+                                  style={{
+                                    objectFit: 'cover',
+                                  }}
+                                />
+                              </div>
                             ))
                           })()}
                         </div>
@@ -740,165 +642,12 @@ export default function AdminClient() {
                             </div>
                           )
                         })()}
-                        <div style={{ marginTop: '0.5rem' }}>
-                          <button
-                            onClick={() => {
-                              setEditingPost(post.id)
-                              setEditingPostData(post)
-                            }}
-                            style={{ marginRight: '0.5rem' }}
-                          >
-                            Edit Post
-                          </button>
-                          <button
-                            onClick={() => deletePost(post.id)}
-                            style={{ background: '#c33' }}
-                          >
-                            Delete Post
-                          </button>
-                        </div>
                       </>
                     )}
                   </div>
                 ))
               )}
             </div>
-          </div>
-
-          <div className="form-section">
-            <h2>Gallery Photos</h2>
-            <form onSubmit={handleUploadGalleryPhoto} style={{ marginBottom: '1.5rem' }}>
-              <div className="form-group">
-                <label htmlFor="gallery-photos">Upload Photos (multiple)</label>
-                <input
-                  id="gallery-photos"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || [])
-                    setGalleryFiles((prev) => {
-                      const combined = [...prev, ...files]
-                      return combined.slice(0, 20)
-                    })
-                  }}
-                />
-                {galleryFiles.length > 0 && (
-                  <div style={{ marginTop: '1rem' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.5rem' }}>
-                      {galleryFiles.length} photo{galleryFiles.length !== 1 ? 's' : ''} selected
-                    </div>
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-                        gap: '0.5rem',
-                      }}
-                    >
-                      {galleryFiles.map((file, idx) => (
-                        <div
-                          key={idx}
-                          style={{
-                            position: 'relative',
-                            aspectRatio: '1',
-                            background: '#f0f0f0',
-                            borderRadius: '4px',
-                            overflow: 'hidden',
-                            border: '1px solid #ddd',
-                          }}
-                        >
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Preview ${idx + 1}`}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                            }}
-                          />
-                          <button
-                            onClick={() =>
-                              setGalleryFiles(galleryFiles.filter((_, i) => i !== idx))
-                            }
-                            type="button"
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              right: 0,
-                              background: '#c33',
-                              color: 'white',
-                              border: 'none',
-                              width: '24px',
-                              height: '24px',
-                              padding: 0,
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                            title={file.name}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <button type="submit" disabled={uploadingGallery || galleryFiles.length === 0}>
-                {uploadingGallery ? 'Uploading...' : 'Add to Gallery'}
-              </button>
-            </form>
-
-            {galleryPhotos.length === 0 ? (
-              <p>No gallery photos yet</p>
-            ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                  gap: '1rem',
-                }}
-              >
-                {galleryPhotos.map((photo) => (
-                  <div key={photo.id} style={{ position: 'relative' }}>
-                    <NextImage
-                      src={`${supabaseUrl}/storage/v1/object/public/photos/${photo.image_id}`}
-                      alt="gallery photo"
-                      width={150}
-                      height={150}
-                      quality={50}
-                      loading="lazy"
-                      style={{
-                        width: '100%',
-                        height: 'auto',
-                        borderRadius: '4px',
-                      }}
-                    />
-                    <button
-                      onClick={() => deleteGalleryPhoto(photo.id)}
-                      style={{
-                        position: 'absolute',
-                        top: '0.3rem',
-                        right: '0.3rem',
-                        background: '#c33',
-                        color: 'white',
-                        border: 'none',
-                        padding: '0.3rem 0.6rem',
-                        fontSize: '0.75rem',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
       </>
 
@@ -922,8 +671,6 @@ export default function AdminClient() {
             confirmDeletePost()
           } else if (confirmDelete.type === 'comment') {
             confirmDeleteComment()
-          } else {
-            confirmDeleteGalleryPhoto()
           }
         }}
         onCancel={() =>

@@ -70,7 +70,7 @@ const MasonryGrid = ({
             alt="photo"
             fill
             sizes="(max-width: 768px) 50px, 100px"
-            quality={50}
+            quality={70}
             loading="lazy"
             style={{
               objectFit: 'cover',
@@ -168,7 +168,7 @@ export default function Gallery() {
                 }
               />
               {familyPhotos.length === 0 && (
-                <p style={{ color: '#aaa' }}>No family photos yet.</p>
+                <p style={{ color: '#aaa', textAlign: 'center', padding: '3rem 0' }}>No family photos yet.</p>
               )}
             </>
           )}
@@ -190,7 +190,7 @@ export default function Gallery() {
                   }
                 />
               ) : (
-                <p style={{ color: '#aaa' }}>No shared memories yet.</p>
+                <p style={{ color: '#aaa', textAlign: 'center', padding: '3rem 0' }}>No shared memories yet.</p>
               )}
             </>
           )}

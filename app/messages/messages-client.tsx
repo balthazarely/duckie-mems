@@ -433,34 +433,10 @@ export default function MessagesClient() {
 
                   <div
                     className="comments"
-                    onClick={() => {
-                      setExpandedComments((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(post.id)) {
-                          next.delete(post.id);
-                        } else {
-                          next.add(post.id);
-                        }
-                        return next;
-                      });
-                    }}
                     style={{
                       padding: expandedComments.has(post.id) ? "1rem" : "0 1rem",
                       marginTop: expandedComments.has(post.id) ? "1rem" : "0.5rem",
                       borderTop: expandedComments.has(post.id) ? "1px solid #e0e0e0" : "none",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s ease",
-                      backgroundColor: expandedComments.has(post.id) ? "#f9f9f9" : "transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!expandedComments.has(post.id)) {
-                        e.currentTarget.style.backgroundColor = "#fafafa";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!expandedComments.has(post.id)) {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                      }
                     }}
                   >
                     <button
@@ -617,7 +593,10 @@ export default function MessagesClient() {
                     ) : (
                       expandedComments.has(post.id) && (
                         <button
-                          onClick={() => setExpandedCommentForm(post.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedCommentForm(post.id);
+                          }}
                           style={{
                             background: "transparent",
                             color: "#666",
