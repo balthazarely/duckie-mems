@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import toast from 'react-hot-toast'
+import { ConfirmModal } from './ConfirmModal'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -44,6 +46,18 @@ export function Admin({
   const [editingComment, setEditingComment] = useState<string | null>(null)
   const [editingCommentData, setEditingCommentData] = useState<Partial<Comment>>({})
 
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean
+    type: 'post' | 'comment' | 'gallery' | null
+    id: string | null
+    isDeleting: boolean
+  }>({
+    isOpen: false,
+    type: null,
+    id: null,
+    isDeleting: false,
+  })
+
   useEffect(() => {
     fetchData()
   }, [])
@@ -76,23 +90,61 @@ export function Admin({
   }
 
   async function deletePost(postId: string) {
-    if (!confirm('Delete this post? Comments will also be deleted.')) return
+    setConfirmDelete({
+      isOpen: true,
+      type: 'post',
+      id: postId,
+      isDeleting: false,
+    })
+  }
+
+  async function confirmDeletePost() {
+    if (!confirmDelete.id) return
 
     try {
+      setConfirmDelete((prev) => ({ ...prev, isDeleting: true }))
       setError('')
       setSuccess('')
+
+      const post = posts.find((p) => p.id === confirmDelete.id)
+      if (post) {
+        const imagesToDelete: string[] = []
+
+        if (post.image_urls && post.image_urls.length > 0) {
+          imagesToDelete.push(...post.image_urls)
+        } else if (post.image_url) {
+          imagesToDelete.push(post.image_url)
+        }
+
+        for (const imageUrl of imagesToDelete) {
+          try {
+            const path = imageUrl.split('/storage/v1/object/public/photos/')[1]
+            if (path) {
+              await supabase.storage
+                .from('photos')
+                .remove([path])
+                .catch(() => {})
+            }
+          } catch (err) {
+            console.error('Error deleting image:', err)
+          }
+        }
+      }
 
       const { error: err } = await supabase
         .from('posts')
         .delete()
-        .eq('id', postId)
+        .eq('id', confirmDelete.id)
 
       if (err) throw err
 
-      setSuccess('Post deleted')
+      toast.success('Post deleted')
+      setConfirmDelete({ isOpen: false, type: null, id: null, isDeleting: false })
       await fetchData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete post')
+      setConfirmDelete((prev) => ({ ...prev, isDeleting: false }))
+      const errorMsg = err instanceof Error ? err.message : 'Failed to delete post'
+      toast.error(errorMsg)
     }
   }
 
@@ -177,23 +229,36 @@ export function Admin({
   }
 
   async function deleteComment(commentId: string) {
-    if (!confirm('Delete this comment?')) return
+    setConfirmDelete({
+      isOpen: true,
+      type: 'comment',
+      id: commentId,
+      isDeleting: false,
+    })
+  }
+
+  async function confirmDeleteComment() {
+    if (!confirmDelete.id) return
 
     try {
+      setConfirmDelete((prev) => ({ ...prev, isDeleting: true }))
       setError('')
       setSuccess('')
 
       const { error: err } = await supabase
         .from('comments')
         .delete()
-        .eq('id', commentId)
+        .eq('id', confirmDelete.id)
 
       if (err) throw err
 
-      setSuccess('Comment deleted')
+      toast.success('Comment deleted')
+      setConfirmDelete({ isOpen: false, type: null, id: null, isDeleting: false })
       await fetchData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete comment')
+      setConfirmDelete((prev) => ({ ...prev, isDeleting: false }))
+      const errorMsg = err instanceof Error ? err.message : 'Failed to delete comment'
+      toast.error(errorMsg)
     }
   }
 
@@ -249,13 +314,23 @@ export function Admin({
   }
 
   async function deleteGalleryPhoto(photoId: string) {
-    if (!confirm('Delete this photo?')) return
+    setConfirmDelete({
+      isOpen: true,
+      type: 'gallery',
+      id: photoId,
+      isDeleting: false,
+    })
+  }
+
+  async function confirmDeleteGalleryPhoto() {
+    if (!confirmDelete.id) return
 
     try {
+      setConfirmDelete((prev) => ({ ...prev, isDeleting: true }))
       setError('')
       setSuccess('')
 
-      const photo = galleryPhotos.find((p) => p.id === photoId)
+      const photo = galleryPhotos.find((p) => p.id === confirmDelete.id)
       if (photo?.image_url) {
         const path = photo.image_url.split('/storage/v1/object/public/photos/')[1]
         if (path) {
@@ -269,14 +344,17 @@ export function Admin({
       const { error: err } = await supabase
         .from('gallery_photos')
         .delete()
-        .eq('id', photoId)
+        .eq('id', confirmDelete.id)
 
       if (err) throw err
 
-      setSuccess('Photo deleted')
+      toast.success('Photo deleted')
+      setConfirmDelete({ isOpen: false, type: null, id: null, isDeleting: false })
       await fetchData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete photo')
+      setConfirmDelete((prev) => ({ ...prev, isDeleting: false }))
+      const errorMsg = err instanceof Error ? err.message : 'Failed to delete photo'
+      toast.error(errorMsg)
     }
   }
 
@@ -422,15 +500,33 @@ export function Admin({
                             {post.caption}
                           </div>
                         )}
-                        <img
-                          src={post.image_url}
-                          alt={post.name}
+                        <div
                           style={{
-                            maxWidth: '200px',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                            gap: '0.5rem',
                             marginBottom: '0.5rem',
-                            borderRadius: '4px',
                           }}
-                        />
+                        >
+                          {(() => {
+                            const images = post.image_urls && post.image_urls.length > 0
+                              ? post.image_urls
+                              : post.image_url ? [post.image_url] : []
+                            return images.map((url, idx) => (
+                              <img
+                                key={idx}
+                                src={url}
+                                alt={`${post.name} ${idx + 1}`}
+                                style={{
+                                  width: '100%',
+                                  height: '100px',
+                                  objectFit: 'cover',
+                                  borderRadius: '4px',
+                                }}
+                              />
+                            ))
+                          })()}
+                        </div>
                         <div>
                           <button
                             onClick={() => {
@@ -698,6 +794,36 @@ export function Admin({
           </div>
         </>
       )}
+
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        isLoading={confirmDelete.isDeleting}
+        title={
+          confirmDelete.type === 'post'
+            ? 'Delete Post?'
+            : confirmDelete.type === 'comment'
+              ? 'Delete Comment?'
+              : 'Delete Photo?'
+        }
+        message={
+          confirmDelete.type === 'post'
+            ? 'This will delete the post and all its comments.'
+            : 'Are you sure you want to delete this?'
+        }
+        onConfirm={() => {
+          if (confirmDelete.type === 'post') {
+            confirmDeletePost()
+          } else if (confirmDelete.type === 'comment') {
+            confirmDeleteComment()
+          } else {
+            confirmDeleteGalleryPhoto()
+          }
+        }}
+        onCancel={() =>
+          !confirmDelete.isDeleting &&
+          setConfirmDelete({ isOpen: false, type: null, id: null, isDeleting: false })
+        }
+      />
     </div>
   )
 }

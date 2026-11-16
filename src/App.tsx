@@ -67,7 +67,7 @@ function AppContent() {
     <div
       style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
     >
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster position="bottom-center" reverseOrder={false} />
       <div style={navStyle}>
         <div style={navContainerStyle}>
           {/* Desktop Navigation - Left */}
@@ -206,7 +206,7 @@ function AppContent() {
             onClick={() => setMobileMenuOpen(false)}
             style={{
               textDecoration: "none",
-              padding: "1rem 1.5rem",
+              padding: "1rem 1rem 1rem 2rem",
               color: "#333",
               fontSize: "1rem",
               borderBottom: "1px solid #eee",
@@ -219,7 +219,7 @@ function AppContent() {
             onClick={() => setMobileMenuOpen(false)}
             style={{
               textDecoration: "none",
-              padding: "1rem 1.5rem",
+              padding: "1rem 1rem 1rem 2rem",
               color: "#333",
               fontSize: "1rem",
               borderBottom: "1px solid #eee",
@@ -232,7 +232,7 @@ function AppContent() {
             onClick={() => setMobileMenuOpen(false)}
             style={{
               textDecoration: "none",
-              padding: "1rem 1.5rem",
+              padding: "1rem 1rem 1rem 2rem",
               color: "#333",
               fontSize: "1rem",
             }}

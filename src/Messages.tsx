@@ -64,6 +64,7 @@ export function Messages() {
   })
 
   useEffect(() => {
+    window.scrollTo(0, 0)
     fetchData()
   }, [])
 
@@ -307,7 +308,7 @@ export function Messages() {
                   }}
                 >
                   <div className="post-name">
-                    <span style={{ marginRight: '0.3rem' }}>👤</span>
+                    <span style={{ marginRight: '0.3rem' }}>💌</span>
                     {post.name}
                   </div>
                   {canDeletePost(post.id) && (
@@ -365,6 +366,7 @@ export function Messages() {
                         <img
                           src={url}
                           alt={`${post.name} ${idx + 1}`}
+                          loading="lazy"
                           style={{
                             width: '100%',
                             height: '100%',

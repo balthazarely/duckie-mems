@@ -118,7 +118,7 @@ export function Gallery() {
               }}
             >
               {photo.caption && (
-                <span style={{ marginRight: "0.3rem" }}>👤</span>
+                <span style={{ marginRight: "0.3rem" }}>💌</span>
               )}
               {photo.caption || photo.name}
             </div>
@@ -155,13 +155,13 @@ export function Gallery() {
               onClick={() => setActiveTab("family")}
               style={tabButtonStyle(activeTab === "family")}
             >
-              Photos
+              Family Photos
             </button>
             <button
               onClick={() => setActiveTab("shared")}
               style={tabButtonStyle(activeTab === "shared")}
             >
-              Shared Photos
+              Community Photos
             </button>
           </div>
 

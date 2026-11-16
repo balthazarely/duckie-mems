@@ -158,6 +158,7 @@ export function SharePage() {
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               placeholder="Your name"
+              disabled={loading}
               required
             />
           </div>
@@ -170,6 +171,7 @@ export function SharePage() {
               value={formCaption}
               onChange={(e) => setFormCaption(e.target.value)}
               placeholder="Share a memory, message, or story..."
+              disabled={loading}
               style={{ minHeight: '120px' }}
             />
           </div>
@@ -181,6 +183,7 @@ export function SharePage() {
               type="file"
               multiple
               accept="image/*"
+              disabled={loading}
               onChange={(e) => {
                 const newFiles = Array.from(e.target.files || [])
                 setFormFiles((prev) => {
