@@ -13,7 +13,8 @@ interface Post {
   created_at: string
   name: string
   caption: string | null
-  image_url: string
+  image_url: string | null
+  image_urls: string[] | null
 }
 
 interface Comment {
@@ -512,7 +513,7 @@ export function Admin({
                             const images = post.image_urls && post.image_urls.length > 0
                               ? post.image_urls
                               : post.image_url ? [post.image_url] : []
-                            return images.map((url, idx) => (
+                            return images.map((url: string, idx: number) => (
                               <img
                                 key={idx}
                                 src={url}
