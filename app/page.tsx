@@ -54,7 +54,7 @@ export default function Home() {
               alt="Anni with dog"
               fill
               style={{
-                objectFit: "cover",
+                objectFit: "contain",
                 borderRadius: "8px",
               }}
             />
@@ -65,7 +65,7 @@ export default function Home() {
               alt="Anni with kids"
               fill
               style={{
-                objectFit: "cover",
+                objectFit: "contain",
                 borderRadius: "8px",
               }}
             />
