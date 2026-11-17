@@ -209,7 +209,7 @@ export default function SharePage() {
               id="files"
               type="file"
               multiple
-              accept=".jpg,.jpeg,.png,.gif,.webp"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.heic,.heif"
               disabled={loading}
               onChange={(e) => {
                 const newFiles = Array.from(e.target.files || []);
@@ -224,7 +224,7 @@ export default function SharePage() {
               }}
             />
             <div style={{ fontSize: "0.85rem", color: "#999", marginTop: "0.5rem" }}>
-              Supported formats: JPG, PNG, GIF, WebP
+              Supported formats: JPG, PNG, GIF, WebP, HEIC
             </div>
           </div>
 
