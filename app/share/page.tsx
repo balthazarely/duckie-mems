@@ -106,7 +106,7 @@ export default function SharePage() {
         .from("posts")
         .insert({
           name: formName.trim(),
-          caption: formCaption.trim() ? JSON.parse(JSON.stringify(formCaption.trim())) : null,
+          caption: formCaption.trim() || null,
           image_url: imageUrls.length > 0 ? imageUrls[0] : null,
           image_urls: imageUrls.length > 0 ? imageUrls : null,
         })

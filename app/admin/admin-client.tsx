@@ -127,6 +127,15 @@ export default function AdminClient() {
         }
       }
 
+      // Delete all comments associated with this post
+      const { error: commentsError } = await supabase
+        .from('comments')
+        .delete()
+        .eq('post_id', confirmDelete.id)
+
+      if (commentsError) console.error('Error deleting comments:', commentsError)
+
+      // Delete the post
       const { error: err } = await supabase
         .from('posts')
         .delete()

@@ -238,13 +238,28 @@ export default function MessagesClient() {
             // Delete all images from storage
             if (imagesToDelete.length > 0) {
               try {
-                await supabase.storage.from("photos").remove(imagesToDelete).catch(() => {});
+                console.log("Deleting images:", imagesToDelete);
+                const { error: deleteError } = await supabase.storage.from("photos").remove(imagesToDelete);
+                if (deleteError) {
+                  console.error("Error deleting images:", deleteError);
+                } else {
+                  console.log("Images deleted successfully");
+                }
               } catch (err) {
                 console.error("Error deleting images:", err);
               }
             }
           }
 
+          // Delete all comments associated with this post
+          const { error: commentsError } = await supabase
+            .from("comments")
+            .delete()
+            .eq("post_id", postId);
+
+          if (commentsError) console.error("Error deleting comments:", commentsError);
+
+          // Delete the post
           const { error: err } = await supabase
             .from("posts")
             .delete()
