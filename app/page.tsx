@@ -40,7 +40,7 @@ export default function Home() {
           </div>
           <h1>Anni Wilson </h1>
           <div className="dates">3/06/38 - 11/11/26</div>
-          <h2 className="tribute">JUST...</h2>
+          <h2 className="tribute" style={{ fontStyle: 'italic', letterSpacing: '0.1em', fontWeight: 100 }}>JUST...</h2>
           <p className="tribute">
             Remember me in the rising sun and the glorious sunsets that I
             enjoyed so much: the scotch, music, operas, laughter and tears: my
