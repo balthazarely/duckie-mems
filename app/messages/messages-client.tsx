@@ -688,7 +688,7 @@ export default function MessagesClient() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2 style={{ marginBottom: "1rem" }}>Help</h2>
             <p style={{ marginBottom: "1rem", lineHeight: "1.6", color: "#555" }}>
-              You can delete posts or comments that you submitted, but for ease of use, we don't have edit functionality. If you'd like to edit your post, please copy your post and delete it, then create a new post.
+              You can delete posts or comments that you submitted, but for ease of use, we don't have edit functionality. If you'd like to edit your post, please copy your post and delete it (the delete button can be found on the top right of your post), then create a new post.
             </p>
             <p style={{ marginBottom: "1.5rem", lineHeight: "1.6", color: "#555" }}>
               If you're stuck and need help editing your post in any way, please email{" "}

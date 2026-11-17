@@ -46,6 +46,11 @@ const FAMILY_PHOTOS = [
   { id: '35', image_url: '/family gallery/anni-farewell-gallery-57.jpeg', name: '' },
   { id: '36', image_url: '/family gallery/anni-farewell-gallery-59.jpeg', name: '' },
   { id: '37', image_url: '/family gallery/anni-farewell-gallery-60.jpeg', name: '' },
+  { id: '38', image_url: '/family gallery/anni-farewell-gallery-61.jpg', name: '' },
+  { id: '39', image_url: '/family gallery/anni-farewell-gallery-63.jpg', name: '' },
+  { id: '40', image_url: '/family gallery/anni-farewell-gallery-64.jpg', name: '' },
+  { id: '41', image_url: '/family gallery/anni-farewell-gallery-65.jpg', name: '' },
+  { id: '42', image_url: '/family gallery/anni-farewell-gallery-66.jpg', name: '' },
 ]
 
 interface GalleryPhoto {
@@ -97,18 +102,25 @@ const MasonryGrid = ({
           textAlign: 'left',
         }}
       >
-        <div style={{ width: '100%', height: '150px', position: 'relative' }}>
-          <Image
-            src={photo.image_url || `${supabaseUrl}/storage/v1/object/public/photos/${photo.image_id}`}
-            alt="photo"
-            fill
-            sizes="(max-width: 768px) 50px, 100px"
-            quality={70}
-            loading="lazy"
-            style={{
-              objectFit: 'cover',
-            }}
-          />
+        <div style={{ width: '100%' }}>
+          <div style={{ width: '100%', height: '150px', position: 'relative' }}>
+            <Image
+              src={photo.image_url || `${supabaseUrl}/storage/v1/object/public/photos/${photo.image_id}`}
+              alt="photo"
+              fill
+              sizes="(max-width: 768px) 50px, 100px"
+              quality={70}
+              loading="lazy"
+              style={{
+                objectFit: 'cover',
+              }}
+            />
+          </div>
+          {photo.name && (
+            <div style={{ padding: '0.5rem 0', fontSize: '0.85rem', color: '#666' }}>
+              💌 {photo.name}
+            </div>
+          )}
         </div>
       </button>
     ))}
@@ -215,7 +227,7 @@ export default function Gallery() {
                     return images.map((url, idx) => ({
                       id: `${p.id}-${idx}`,
                       image_url: url,
-                      name: `💌 ${p.name}`,
+                      name: p.name,
                     }))
                   })}
                   onImageClick={(imgs, idx) =>
