@@ -1,5 +1,6 @@
 import { Lora } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
+import { Analytics } from '@vercel/analytics/next'
 import './styles.css'
 import Navigation from './navigation'
 import Footer from './footer'
@@ -21,6 +22,7 @@ export default function RootLayout({
         <meta name="description" content="Share memories and messages" />
       </head>
       <body style={{ margin: 0, padding: 0 }}>
+        <Analytics />
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           <Toaster
             position="bottom-center"

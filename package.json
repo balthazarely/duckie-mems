@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
+    "@vercel/analytics": "^2.0.1",
     "browser-image-compression": "^2.0.2",
     "dotenv": "^18.0.10",
     "next": "^15.0.0",
