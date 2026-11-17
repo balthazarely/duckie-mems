@@ -9,11 +9,43 @@ import { supabase } from '@/lib/supabase'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 const FAMILY_PHOTOS = [
-  { id: '1', image_url: '/family gallery/IMG_0068.jpeg', name: '' },
-  { id: '2', image_url: '/family gallery/IMG_2015.jpeg', name: '' },
-  { id: '3', image_url: '/family gallery/IMG_4308.jpeg', name: '' },
-  { id: '4', image_url: '/family gallery/IMG_4547.jpeg', name: '' },
-  { id: '5', image_url: '/family gallery/IMG_4605.jpeg', name: '' },
+  { id: '1', image_url: '/family gallery/anni-farewell-gallery-2.jpeg', name: '' },
+  { id: '2', image_url: '/family gallery/anni-farewell-gallery-3.jpeg', name: '' },
+  { id: '3', image_url: '/family gallery/anni-farewell-gallery-8.JPG', name: '' },
+  { id: '4', image_url: '/family gallery/anni-farewell-gallery-12.jpg', name: '' },
+  { id: '5', image_url: '/family gallery/anni-farewell-gallery-18.JPG', name: '' },
+  { id: '6', image_url: '/family gallery/anni-farewell-gallery-21.JPG', name: '' },
+  { id: '7', image_url: '/family gallery/anni-farewell-gallery-27.jpg', name: '' },
+  { id: '8', image_url: '/family gallery/anni-farewell-gallery-28.jpg', name: '' },
+  { id: '9', image_url: '/family gallery/anni-farewell-gallery-29.jpeg', name: '' },
+  { id: '10', image_url: '/family gallery/anni-farewell-gallery-30.jpg', name: '' },
+  { id: '11', image_url: '/family gallery/anni-farewell-gallery-31.jpg', name: '' },
+  { id: '12', image_url: '/family gallery/anni-farewell-gallery-32.jpg', name: '' },
+  { id: '13', image_url: '/family gallery/anni-farewell-gallery-35.jpeg', name: '' },
+  { id: '14', image_url: '/family gallery/anni-farewell-gallery-36.jpg', name: '' },
+  { id: '15', image_url: '/family gallery/anni-farewell-gallery-37.jpg', name: '' },
+  { id: '16', image_url: '/family gallery/anni-farewell-gallery-38.jpg', name: '' },
+  { id: '17', image_url: '/family gallery/anni-farewell-gallery-39.jpg', name: '' },
+  { id: '18', image_url: '/family gallery/anni-farewell-gallery-40.jpg', name: '' },
+  { id: '19', image_url: '/family gallery/anni-farewell-gallery-41.jpeg', name: '' },
+  { id: '20', image_url: '/family gallery/anni-farewell-gallery-42.jpg', name: '' },
+  { id: '21', image_url: '/family gallery/anni-farewell-gallery-43.jpg', name: '' },
+  { id: '22', image_url: '/family gallery/anni-farewell-gallery-44.jpeg', name: '' },
+  { id: '23', image_url: '/family gallery/anni-farewell-gallery-45.jpg', name: '' },
+  { id: '24', image_url: '/family gallery/anni-farewell-gallery-46.jpg', name: '' },
+  { id: '25', image_url: '/family gallery/anni-farewell-gallery-47.jpg', name: '' },
+  { id: '26', image_url: '/family gallery/anni-farewell-gallery-48.JPG', name: '' },
+  { id: '27', image_url: '/family gallery/anni-farewell-gallery-49.jpg', name: '' },
+  { id: '28', image_url: '/family gallery/anni-farewell-gallery-50.jpeg', name: '' },
+  { id: '29', image_url: '/family gallery/anni-farewell-gallery-51.jpeg', name: '' },
+  { id: '30', image_url: '/family gallery/anni-farewell-gallery-52.JPG', name: '' },
+  { id: '31', image_url: '/family gallery/anni-farewell-gallery-53.jpeg', name: '' },
+  { id: '32', image_url: '/family gallery/anni-farewell-gallery-54.jpeg', name: '' },
+  { id: '33', image_url: '/family gallery/anni-farewell-gallery-55.jpeg', name: '' },
+  { id: '34', image_url: '/family gallery/anni-farewell-gallery-56.jpeg', name: '' },
+  { id: '35', image_url: '/family gallery/anni-farewell-gallery-57.jpeg', name: '' },
+  { id: '36', image_url: '/family gallery/anni-farewell-gallery-59.jpeg', name: '' },
+  { id: '37', image_url: '/family gallery/anni-farewell-gallery-60.jpeg', name: '' },
 ]
 
 interface GalleryPhoto {
@@ -40,9 +72,10 @@ const MasonryGrid = ({
   onImageClick: (images: string[], idx: number) => void
 }) => (
   <div
+    className="gallery-grid"
     style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+      gridTemplateColumns: 'repeat(2, 1fr)',
       gap: '1rem',
       padding: '0 1.5rem',
     }}

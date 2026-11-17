@@ -68,6 +68,7 @@ export default function MessagesClient() {
   });
 
   const [shareButtonHovered, setShareButtonHovered] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -296,35 +297,58 @@ export default function MessagesClient() {
           of course, a whisky! <br />
           Please add your memories and/or photos of our precious Anni.
         </p>
-        <Link
-          href="/share"
-          onMouseEnter={() => setShareButtonHovered(true)}
-          onMouseLeave={() => setShareButtonHovered(false)}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.6rem",
-            marginTop: "1rem",
-            background: "#333",
-            color: "white",
-            padding: "0.5rem 1rem",
-            borderRadius: "4px",
-            textDecoration: "none",
-            opacity: shareButtonHovered ? 0.85 : 1,
-            transition: "opacity 0.2s ease",
-          }}
-        >
-          <img
-            src="/duck_image.png"
-            alt="Duck"
+        <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem", alignItems: "center", justifyContent: "center" }}>
+          <Link
+            href="/share"
+            onMouseEnter={() => setShareButtonHovered(true)}
+            onMouseLeave={() => setShareButtonHovered(false)}
             style={{
-              height: "16px",
-              width: "auto",
-              filter: "brightness(0) invert(1)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              background: "#333",
+              color: "white",
+              padding: "0.5rem 1rem",
+              borderRadius: "4px",
+              textDecoration: "none",
+              opacity: shareButtonHovered ? 0.85 : 1,
+              transition: "opacity 0.2s ease",
             }}
-          />
-          Share a Memory
-        </Link>
+          >
+            <img
+              src="/duck_image.png"
+              alt="Duck"
+              style={{
+                height: "16px",
+                width: "auto",
+                filter: "brightness(0) invert(1)",
+              }}
+            />
+            Share a Memory
+          </Link>
+          <button
+            onClick={() => setShowHelpModal(true)}
+            style={{
+              background: "#666",
+              color: "white",
+              border: "none",
+              padding: "0.5rem 1rem",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "0.95rem",
+              transition: "background 0.2s ease",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              lineHeight: "1.5",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#777")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#666")}
+          >
+            <span style={{ fontSize: "1.1rem" }}>?</span>
+            Help
+          </button>
+        </div>
       </header>
 
       {error && <div className="error">{error}</div>}
@@ -658,6 +682,38 @@ export default function MessagesClient() {
           setLightbox({ isOpen: false, images: [], initialIndex: 0 })
         }
       />
+
+      {showHelpModal && (
+        <div className="modal-backdrop" onClick={() => setShowHelpModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ marginBottom: "1rem" }}>Help</h2>
+            <p style={{ marginBottom: "1rem", lineHeight: "1.6", color: "#555" }}>
+              You can delete posts or comments that you submitted, but for ease of use, we don't have edit functionality. If you'd like to edit your post, please copy your post and delete it, then create a new post.
+            </p>
+            <p style={{ marginBottom: "1.5rem", lineHeight: "1.6", color: "#555" }}>
+              If you're stuck and need help editing your post in any way, please email{" "}
+              <a href="mailto:balthazar2120@gmail.com" style={{ color: "#333", fontWeight: "500" }}>
+                balthazar2120@gmail.com
+              </a>
+              {" "}for assistance.
+            </p>
+            <button
+              onClick={() => setShowHelpModal(false)}
+              style={{
+                background: "#333",
+                color: "white",
+                border: "none",
+                padding: "0.6rem 1.5rem",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "0.95rem",
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

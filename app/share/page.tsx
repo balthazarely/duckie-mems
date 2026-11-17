@@ -294,9 +294,10 @@ export default function SharePage() {
           <div
             style={{
               display: "flex",
+              flexDirection: "column",
               gap: "1rem",
               marginTop: "1.5rem",
-              alignItems: "center",
+              alignItems: "stretch",
             }}
           >
             <button type="submit" disabled={loading || !isFormValid()}>
@@ -311,7 +312,15 @@ export default function SharePage() {
               Cancel
             </button>
             {loading && (
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "1rem",
+                  textAlign: "center",
+                }}
+              >
                 <div style={{ transform: "scale(0.6)" }}>
                   <DuckLoader />
                 </div>
