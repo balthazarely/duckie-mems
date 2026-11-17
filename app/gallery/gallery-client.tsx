@@ -74,6 +74,7 @@ const FAMILY_PHOTOS = [
   { id: '63', image_url: '/family gallery/anni-gallery-21.jpg', name: '' },
   { id: '64', image_url: '/family gallery/anni-gallery-57.jpeg', name: '' },
   { id: '65', image_url: '/family gallery/anni-gallery-26.JPG', name: '' },
+  { id: '66', image_url: '/family gallery/anni-gallery-70.jpeg', name: '' },
 ]
 
 interface GalleryPhoto {
